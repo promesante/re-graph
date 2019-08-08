@@ -9,26 +9,12 @@
  interceptors
  (fn [{:keys [db dispatchable-event]} [query variables callback-event :as event]]
    (let [query (str "mutation " (string/replace query #"^mutation\s?" ""))]
-     (cond
-       (get-in db [:websocket :ready?])
-       (let [query-id (internals/generate-query-id)]
-         {:db (assoc-in db [:subscriptions query-id] {:callback callback-event})
-          ::internals/send-ws [(get-in db [:websocket :connection])
-                               {:id query-id
-                                :type "start"
-                                :payload {:query query
-                                          :variables variables}}]})
-
-       (:websocket db)
-       {:db (update-in db [:websocket :queue] conj dispatchable-event)}
-
-       :else
        {::internals/send-http [(:http-url db)
                                {:request (:http-parameters db)
                                 :payload {:query query
                                           :variables variables}}
                                (fn [payload]
-                                 (re-frame/dispatch (conj callback-event payload)))]}))))
+                                 (re-frame/dispatch (conj callback-event payload)))]})))
 
 (defn mutate
   ([query variables callback-fn] (mutate default-instance-name query variables callback-fn))
@@ -40,26 +26,12 @@
  interceptors
  (fn [{:keys [db dispatchable-event]} [query variables callback-event :as event]]
    (let [query (str "query " (string/replace query #"^query\s?" ""))]
-     (cond
-       (get-in db [:websocket :ready?])
-       (let [query-id (internals/generate-query-id)]
-         {:db (assoc-in db [:subscriptions query-id] {:callback callback-event})
-          ::internals/send-ws [(get-in db [:websocket :connection])
-                               {:id query-id
-                                :type "start"
-                                :payload {:query query
-                                          :variables variables}}]})
-
-       (get-in db [:websocket])
-       {:db (update-in db [:websocket :queue] conj dispatchable-event)}
-
-       :else
        {::internals/send-http [(:http-url db)
                                {:request (:http-parameters db)
                                 :payload {:query query
                                           :variables variables}}
                                (fn [payload]
-                                 (re-frame/dispatch (conj callback-event payload)))]}))))
+                                 (re-frame/dispatch (conj callback-event payload)))]})))
 
 (defn query
   ([query-string variables callback-fn] (query default-instance-name query-string variables callback-fn))
