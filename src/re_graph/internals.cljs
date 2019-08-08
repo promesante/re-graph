@@ -155,6 +155,9 @@
         "complete"
         (re-frame/dispatch [::on-ws-complete instance-name (aget data "id")])
 
+        "ka"
+        (re-frame/dispatch [::on-ws-close instance-name])
+        
         "error"
         (js/console.warn (str "GraphQL error for " instance-name " - " (aget data "id") ": " (aget data "payload" "message")))
 
